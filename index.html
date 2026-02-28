@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Умные Заметки - Аутентификация</title>
+    <!-- Скрипт для работы с Telegram Web App -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #1c1e21;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+        .container {
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .user-info, .auth-section {
+            margin-bottom: 20px;
+        }
+        .user-info p {
+            font-size: 16px;
+            word-wrap: break-word;
+        }
+        .user-info strong {
+            color: #007bff;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .status.success {
+            color: #28a745;
+        }
+        .status.error {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Панель Аутентификации</h1>
+
+    <!-- Раздел 1: Умные заметки (Авторизация по ID Telegram) -->
+    <div class="user-info" id="telegram-info">
+        <h2>Вход через Telegram</h2>
+        <p id="user-data">Загрузка данных пользователя...</p>
+    </div>
+
+    <!-- Раздел 2: Биометрическая авторизация (WebAuthn) -->
+    <div class="auth-section">
+        <h2>Биометрия (Face/Touch ID)</h2>
+        <button id="register-btn" disabled>Зарегистрировать биометрию</button>
+        <button id="login-btn" disabled>Войти по биометрии</button>
+        <p id="webauthn-status" class="status"></p>
+    </div>
+</div>
+
+<script>
+    // =================================================================
+    // ОБЩАЯ ЛОГИКА И ИНИЦИАЛИЗАЦИЯ
+    // =================================================================
+    const tg = window.Telegram.WebApp;
+    
+    // Элементы DOM
+    const userDataEl = document.getElementById('user-data');
+    const registerBtn = document.getElementById('register-btn');
+    const loginBtn = document.getElementById('login-btn');
+    const webauthnStatusEl = document.getElementById('webauthn-status');
+    
+    let telegramUser = null;
+
+    // Инициализируем приложение Telegram
+    tg.ready();
+    tg.expand(); // Раскрываем приложение на весь экран
+
+    // =================================================================
+    // РАЗДЕЛ 1: АВТОВХОД ЧЕРЕЗ TELEGRAM
+    // =================================================================
+    
+    // Проверяем, доступны ли данные пользователя
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        telegramUser = tg.initDataUnsafe.user;
+        userDataEl.innerHTML = `
+            Добро пожаловать, <strong>${telegramUser.first_name || ''} ${telegramUser.last_name || ''}</strong>!
+            <br>Ваш ID: <strong>${telegramUser.id}</strong>
+            <br><small>(Эти данные получены автоматически)</small>
+        `;
+        
+        // Включаем кнопки для WebAuthn, так как мы знаем ID пользователя
+        registerBtn.disabled = false;
+        loginBtn.disabled = false;
+
+        // ВАЖНО: На реальном проекте эти данные нужно отправить на ваш сервер
+        // для валидации, чтобы убедиться, что они не подделаны.
+        // fetch('/api/validate-telegram-data', { 
+        //     method: 'POST', 
+        //     headers: {'Content-Type': 'application/json'},
+        //     body: JSON.stringify({ initData: tg.initData }) 
+        // });
+
+    } else {
+        userDataEl.textContent = 'Не удалось получить данные. Откройте это приложение через вашего Telegram-бота.';
+        webauthnStatusEl.textContent = 'Биометрия недоступна без ID пользователя.';
+        webauthnStatusEl.className = 'status error';
+    }
+
+    // =================================================================
+    // РАЗДЕЛ 2: БИОМЕТРИЧЕСКАЯ АУТЕНТИФИКАЦИЯ (WebAuthn)
+    // =================================================================
+
+    // Вспомогательные функции для конвертации Base64 <-> ArrayBuffer
+    function bufferToBase64(buff) {
+        return btoa(String.fromCharCode.apply(null, new Uint8Array(buff)));
+    }
+
+    function base64ToBuffer(base64) {
+        const str = atob(base64);
+        const buffer = new Uint8Array(str.length);
+        for (let i = 0; i < str.length; i++) {
+            buffer[i] = str.charCodeAt(i);
+        }
+        return buffer;
+    }
+
+    // --- РЕГИСТРАЦИЯ БИОМЕТРИИ ---
+    registerBtn.addEventListener('click', async () => {
+        if (!telegramUser) return;
+        
+        webauthnStatusEl.textContent = 'Подготовка к регистрации...';
+        webauthnStatusEl.className = 'status';
+
+        try {
+            // 1. ЗАПРОС "ВЫЗОВА" (CHALLENGE) С СЕРВЕРА
+            // Сервер должен сгенерировать случайный challenge и прислать его.
+            // Мы симулируем этот шаг.
+            console.log('Шаг 1: Запрос challenge с сервера для регистрации...');
+            const challenge = new Uint8Array(32);
+            window.crypto.getRandomValues(challenge); // Генерируем случайный challenge на клиенте (для демо)
+
+            const createOptions = {
+                publicKey: {
+                    challenge: challenge,
+                    rp: { name: "Умные Заметки" }, // Relying Party - ваше приложение
+                    user: {
+                        id: base64ToBuffer(String(telegramUser.id)), // ID пользователя должен быть ArrayBuffer
+                        name: telegramUser.username || `${telegramUser.first_name}`,
+                        displayName: telegramUser.first_name || 'Пользователь',
+                    },
+                    pubKeyCredParams: [{ alg: -7, type: "public-key" }], // ES256
+                    authenticatorSelection: {
+                        authenticatorAttachment: "platform", // "platform" для FaceID/TouchID
+                        userVerification: "required",
+                    },
+                    timeout: 60000,
+                    attestation: "direct"
+                }
+            };
+
+            // 2. СОЗДАНИЕ КЛЮЧА НА УСТРОЙСТВЕ
+            console.log('Шаг 2: Вызов navigator.credentials.create()');
+            const credential = await navigator.credentials.create(createOptions);
+            console.log('Ключ создан:', credential);
+
+            // 3. ОТПРАВКА ПУБЛИЧНОГО КЛЮЧА НА СЕРВЕР
+            // Сервер должен сохранить этот ключ, привязав его к ID пользователя.
+            const credentialForServer = {
+                id: credential.id,
+                rawId: bufferToBase64(credential.rawId),
+                type: credential.type,
+                response: {
+                    clientDataJSON: bufferToBase64(credential.response.clientDataJSON),
+                    attestationObject: bufferToBase64(credential.response.attestationObject),
+                },
+            };
+            
+            console.log('Шаг 3: Отправка данных на сервер для сохранения:', credentialForServer);
+            // fetch('/api/webauthn/register', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify({ userId: telegramUser.id, cred: credentialForServer })
+            // });
+
+            webauthnStatusEl.textContent = 'Биометрия успешно зарегистрирована!';
+            webauthnStatusEl.className = 'status success';
+
+        } catch (err) {
+            console.error('Ошибка регистрации WebAuthn:', err);
+            webauthnStatusEl.textContent = `Ошибка: ${err.message}`;
+            webauthnStatusEl.className = 'status error';
+        }
+    });
+
+    // --- ВХОД ПО БИОМЕТРИИ ---
+    loginBtn.addEventListener('click', async () => {
+        if (!telegramUser) return;
+
+        webauthnStatusEl.textContent = 'Подготовка к входу...';
+        webauthnStatusEl.className = 'status';
+
+        try {
+            // 1. ЗАПРОС "ВЫЗОВА" (CHALLENGE) С СЕРВЕРА
+            // Сервер снова генерирует challenge.
+            console.log('Шаг 1: Запрос challenge с сервера для входа...');
+            const challenge = new Uint8Array(32);
+            window.crypto.getRandomValues(challenge); // Симуляция
+
+            const getOptions = {
+                publicKey: {
+                    challenge: challenge,
+                    timeout: 60000,
+                    userVerification: "required",
+                    rpId: window.location.hostname, // Домен, на котором зарегистрирован ключ
+                }
+            };
+
+            // 2. ПОДПИСЬ "ВЫЗОВА" С ПОМОЩЬЮ КЛЮЧА НА УСТРОЙСТВЕ
+            console.log('Шаг 2: Вызов navigator.credentials.get()');
+            const assertion = await navigator.credentials.get(getOptions);
+            console.log('Подтверждение получено:', assertion);
+
+            // 3. ОТПРАВКА ПОДПИСАННЫХ ДАННЫХ НА СЕРВЕР ДЛЯ ПРОВЕРКИ
+            const assertionForServer = {
+                id: assertion.id,
+                rawId: bufferToBase64(assertion.rawId),
+                type: assertion.type,
+                response: {
+                    clientDataJSON: bufferToBase64(assertion.response.clientDataJSON),
+                    authenticatorData: bufferToBase64(assertion.response.authenticatorData),
+                    signature: bufferToBase64(assertion.response.signature),
+                    userHandle: assertion.response.userHandle ? bufferToBase64(assertion.response.userHandle) : null,
+                },
+            };
+
+            console.log('Шаг 3: Отправка подтверждения на сервер для проверки:', assertionForServer);
+            // fetch('/api/webauthn/login', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(assertionForServer)
+            // });
+
+            webauthnStatusEl.textContent = 'Вход по биометрии выполнен успешно!';
+            webauthnStatusEl.className = 'status success';
+
+        } catch (err) {
+            console.error('Ошибка входа по WebAuthn:', err);
+            webauthnStatusEl.textContent = `Ошибка: ${err.message}`;
+            webauthnStatusEl.className = 'status error';
+        }
+    });
+
+</script>
+
+</body>
+</html>
