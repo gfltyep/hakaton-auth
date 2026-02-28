@@ -198,10 +198,7 @@
             const createOptions = {
                 publicKey: {
                     challenge: challenge,
-                    rp: { 
-                        name: "Умные Заметки",
-                        id: "localhost" // Явно указываем ID для работы с локального файла
-                    },
+                    rp: { name: "Умные Заметки" }, // Убираем id: "localhost" для лучшей совместимости с iPhone
                     user: {
                         id: strToArrayBuffer(String(telegramUser.id)), // ID пользователя должен быть ArrayBuffer
                         name: telegramUser.username || `${telegramUser.first_name}`,
@@ -209,7 +206,8 @@
                     },
                     pubKeyCredParams: [{ alg: -7, type: "public-key" }], // ES256
                     authenticatorSelection: {
-                        authenticatorAttachment: "platform", // "platform" для FaceID/TouchID
+                        // "platform" может вызывать проблемы, делаем выбор менее строгим
+                        residentKey: "required",
                         userVerification: "required",
                     },
                     timeout: 60000,
@@ -281,7 +279,9 @@
                         type: "public-key",
                         id: base64ToBuffer(storedCred.rawId),
                     }],
-                    rpId: "localhost", // Должен совпадать с rp.id при регистрации
+                    // rpId должен соответствовать тому, что использовалось при регистрации.
+                    // Если rp.id не был указан, то и здесь его указывать не нужно.
+                    // rpId: "localhost", 
                 }
             };
 
