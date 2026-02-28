@@ -211,18 +211,15 @@
             };
             
             console.log('Шаг 3: Отправка данных на сервер для сохранения:', credentialForServer);
-            // fetch('/api/webauthn/register', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify({ userId: telegramUser.id, cred: credentialForServer })
-            // });
+            // Имитация сервера: сохраняем учетные данные в localStorage
+            localStorage.setItem(`webauthn_cred_${telegramUser.id}`, JSON.stringify(credentialForServer));
 
             webauthnStatusEl.textContent = 'Биометрия успешно зарегистрирована!';
             webauthnStatusEl.className = 'status success';
 
         } catch (err) {
             console.error('Ошибка регистрации WebAuthn:', err);
-            webauthnStatusEl.textContent = `Ошибка: ${err.message}`;
+            webauthnStatusEl.textContent = `Ошибка регистрации: ${err.message}`;
             webauthnStatusEl.className = 'status error';
         }
     });
@@ -235,6 +232,15 @@
         webauthnStatusEl.className = 'status';
 
         try {
+            // 0. ПРОВЕРКА НАЛИЧИЯ РЕГИСТРАЦИИ В LOCALSTORAGE
+            const storedCredString = localStorage.getItem(`webauthn_cred_${telegramUser.id}`);
+            if (!storedCredString) {
+                webauthnStatusEl.textContent = 'Сначала нужно зарегистрировать биометрию.';
+                webauthnStatusEl.className = 'status error';
+                return;
+            }
+            const storedCred = JSON.parse(storedCredString);
+
             // 1. ЗАПРОС "ВЫЗОВА" (CHALLENGE) С СЕРВЕРА
             // Сервер снова генерирует challenge.
             console.log('Шаг 1: Запрос challenge с сервера для входа...');
@@ -246,6 +252,11 @@
                     challenge: challenge,
                     timeout: 60000,
                     userVerification: "required",
+                    // Указываем, какой ключ мы ожидаем использовать. Это повышает безопасность.
+                    allowCredentials: [{
+                        type: "public-key",
+                        id: base64ToBuffer(storedCred.rawId),
+                    }],
                     rpId: window.location.hostname, // Домен, на котором зарегистрирован ключ
                 }
             };
@@ -269,18 +280,14 @@
             };
 
             console.log('Шаг 3: Отправка подтверждения на сервер для проверки:', assertionForServer);
-            // fetch('/api/webauthn/login', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(assertionForServer)
-            // });
+            // Имитация сервера: в статическом варианте успешный вызов .get() уже подтверждает владение ключом.
 
             webauthnStatusEl.textContent = 'Вход по биометрии выполнен успешно!';
             webauthnStatusEl.className = 'status success';
 
         } catch (err) {
             console.error('Ошибка входа по WebAuthn:', err);
-            webauthnStatusEl.textContent = `Ошибка: ${err.message}`;
+            webauthnStatusEl.textContent = `Ошибка входа: ${err.message}`;
             webauthnStatusEl.className = 'status error';
         }
     });
