@@ -70,6 +70,14 @@
         .status.error {
             color: #dc3545;
         }
+        .info-note {
+            font-size: 14px;
+            color: #666;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -90,6 +98,8 @@
         <button id="login-btn" disabled>Войти по биометрии</button>
         <p id="webauthn-status" class="status"></p>
     </div>
+    
+    <div class="info-note" id="browser-info"></div>
 </div>
 
 <script>
@@ -103,18 +113,18 @@
     const registerBtn = document.getElementById('register-btn');
     const loginBtn = document.getElementById('login-btn');
     const webauthnStatusEl = document.getElementById('webauthn-status');
+    const browserInfoEl = document.getElementById('browser-info');
     
     let telegramUser = null;
 
     // Инициализируем приложение Telegram
     tg.ready();
-    tg.expand(); // Раскрываем приложение на весь экран
+    tg.expand();
 
     // =================================================================
     // РАЗДЕЛ 1: АВТОВХОД ЧЕРЕЗ TELEGRAM
     // =================================================================
     
-    // Проверяем, доступны ли данные пользователя
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         telegramUser = tg.initDataUnsafe.user;
         userDataEl.innerHTML = `
@@ -123,17 +133,8 @@
             <br><small>(Эти данные получены автоматически)</small>
         `;
         
-        // Включаем кнопки для WebAuthn, так как мы знаем ID пользователя
         registerBtn.disabled = false;
         loginBtn.disabled = false;
-
-        // ВАЖНО: На реальном проекте эти данные нужно отправить на ваш сервер
-        // для валидации, чтобы убедиться, что они не подделаны.
-        // fetch('/api/validate-telegram-data', { 
-        //     method: 'POST', 
-        //     headers: {'Content-Type': 'application/json'},
-        //     body: JSON.stringify({ initData: tg.initData }) 
-        // });
 
     } else {
         userDataEl.textContent = 'Не удалось получить данные. Откройте это приложение через вашего Telegram-бота.';
@@ -145,18 +146,28 @@
     // РАЗДЕЛ 2: БИОМЕТРИЧЕСКАЯ АУТЕНТИФИКАЦИЯ (WebAuthn)
     // =================================================================
 
-    // Проверяем, поддерживает ли браузер WebAuthn
-    if (window.PublicKeyCredential) {
-        console.log('WebAuthn поддерживается этим браузером.');
-    } else {
-        console.warn('WebAuthn не поддерживается этим браузером.');
-        webauthnStatusEl.textContent = 'Ваш браузер не поддерживает биометрию (WebAuthn).';
-        webauthnStatusEl.className = 'status error';
-        // Отключаем кнопки навсегда, если поддержки нет
-        registerBtn.disabled = true;
-        loginBtn.disabled = true;
-        registerBtn.style.display = 'none'; // Можно даже скрыть их
-        loginBtn.style.display = 'none';
+    // Проверяем поддержку WebAuthn и наличие platform authenticator
+    async function checkWebAuthnSupport() {
+        if (!window.PublicKeyCredential) {
+            browserInfoEl.textContent = '❌ WebAuthn не поддерживается этим браузером.';
+            return false;
+        }
+        
+        try {
+            // Проверяем доступность platform authenticator
+            const isAvailable = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+            if (isAvailable) {
+                browserInfoEl.textContent = '✅ Биометрия (Face/Touch ID) доступна на этом устройстве.';
+                return true;
+            } else {
+                browserInfoEl.textContent = '⚠️ Биометрический аутентификатор не найден на этом устройстве.';
+                return false;
+            }
+        } catch (error) {
+            console.warn('Ошибка проверки поддержки WebAuthn:', error);
+            browserInfoEl.textContent = '⚠️ Не удалось проверить доступность биометрии.';
+            return true; // Продолжаем, даже если проверка не удалась
+        }
     }
 
     // Вспомогательные функции для конвертации Base64 <-> ArrayBuffer
@@ -173,55 +184,84 @@
         return buffer;
     }
 
-    // Новая вспомогательная функция для преобразования строки в ArrayBuffer
-    // Это правильный способ для создания user.id
     function strToArrayBuffer(str) {
         const encoder = new TextEncoder();
-        return encoder.encode(str); // Возвращает Uint8Array, который является ArrayBufferView
+        return encoder.encode(str);
+    }
+
+    // Получаем корректный RP ID (домен)
+    function getRpId() {
+        // В Telegram WebView может быть особый случай
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            return 'localhost';
+        }
+        // Используем текущий домен без порта
+        return window.location.hostname;
     }
 
     // --- РЕГИСТРАЦИЯ БИОМЕТРИИ ---
     registerBtn.addEventListener('click', async () => {
         if (!telegramUser) return;
         
+        // Проверяем поддержку перед регистрацией
+        const isSupported = await checkWebAuthnSupport();
+        if (!isSupported) {
+            webauthnStatusEl.textContent = 'Биометрия не поддерживается на этом устройстве.';
+            webauthnStatusEl.className = 'status error';
+            return;
+        }
+        
         webauthnStatusEl.textContent = 'Подготовка к регистрации...';
         webauthnStatusEl.className = 'status';
 
         try {
-            // 1. ЗАПРОС "ВЫЗОВА" (CHALLENGE) С СЕРВЕРА
-            // Сервер должен сгенерировать случайный challenge и прислать его.
-            // Мы симулируем этот шаг.
-            console.log('Шаг 1: Запрос challenge с сервера для регистрации...');
+            // Генерируем challenge
             const challenge = new Uint8Array(32);
-            window.crypto.getRandomValues(challenge); // Генерируем случайный challenge на клиенте (для демо)
-
+            window.crypto.getRandomValues(challenge);
+            
+            // Создаем ID пользователя фиксированной длины (64 байта)
+            const userIdBuffer = new Uint8Array(64);
+            const encoder = new TextEncoder();
+            const idString = String(telegramUser.id);
+            const idBytes = encoder.encode(idString);
+            userIdBuffer.set(idBytes.slice(0, 64));
+            
             const createOptions = {
                 publicKey: {
                     challenge: challenge,
-                    rp: { name: "Умные Заметки" }, // Убираем id: "localhost" для лучшей совместимости с iPhone
-                    user: {
-                        id: strToArrayBuffer(String(telegramUser.id)), // ID пользователя должен быть ArrayBuffer
-                        name: telegramUser.username || `${telegramUser.first_name}`,
-                        displayName: telegramUser.first_name || 'Пользователь',
+                    rp: {
+                        name: "Умные Заметки",
+                        id: getRpId() // Используем правильный RP ID
                     },
-                    pubKeyCredParams: [{ alg: -7, type: "public-key" }], // ES256
+                    user: {
+                        id: userIdBuffer, // Фиксированная длина 64 байта
+                        name: telegramUser.username || `${telegramUser.id}`,
+                        displayName: `${telegramUser.first_name || ''} ${telegramUser.last_name || ''}`.trim() || 'Пользователь',
+                    },
+                    pubKeyCredParams: [
+                        { alg: -7, type: "public-key" }, // ES256
+                        { alg: -257, type: "public-key" } // RS256 (для совместимости)
+                    ],
                     authenticatorSelection: {
-                        // "platform" может вызывать проблемы, делаем выбор менее строгим
-                        residentKey: "required",
-                        userVerification: "required",
+                        authenticatorAttachment: "platform", // Используем встроенный аутентификатор
+                        residentKey: "preferred",
+                        userVerification: "preferred", // Изменено с "required" на "preferred"
                     },
                     timeout: 60000,
-                    attestation: "none" // "none" для лучшей совместимости
+                    attestation: "none",
+                    extensions: {
+                        credProps: true
+                    }
                 }
             };
 
-            // 2. СОЗДАНИЕ КЛЮЧА НА УСТРОЙСТВЕ
-            console.log('Шаг 2: Вызов navigator.credentials.create()');
+            console.log('Параметры регистрации:', createOptions);
+            webauthnStatusEl.textContent = 'Пожалуйста, подтвердите действие на устройстве...';
+            
             const credential = await navigator.credentials.create(createOptions);
             console.log('Ключ создан:', credential);
 
-            // 3. ОТПРАВКА ПУБЛИЧНОГО КЛЮЧА НА СЕРВЕР
-            // Сервер должен сохранить этот ключ, привязав его к ID пользователя.
+            // Сохраняем учетные данные
             const credentialForServer = {
                 id: credential.id,
                 rawId: bufferToBase64(credential.rawId),
@@ -232,16 +272,25 @@
                 },
             };
             
-            console.log('Шаг 3: Отправка данных на сервер для сохранения:', credentialForServer);
-            // Имитация сервера: сохраняем учетные данные в localStorage
             localStorage.setItem(`webauthn_cred_${telegramUser.id}`, JSON.stringify(credentialForServer));
 
-            webauthnStatusEl.textContent = 'Биометрия успешно зарегистрирована!';
+            webauthnStatusEl.textContent = '✅ Биометрия успешно зарегистрирована!';
             webauthnStatusEl.className = 'status success';
 
         } catch (err) {
             console.error('Ошибка регистрации WebAuthn:', err);
-            webauthnStatusEl.textContent = `Ошибка регистрации: ${err.message}`;
+            
+            // Более понятные сообщения об ошибках
+            let errorMessage = 'Ошибка регистрации';
+            if (err.name === 'NotAllowedError') {
+                errorMessage = 'Действие отменено или не разрешено пользователем.';
+            } else if (err.name === 'NotSupportedError') {
+                errorMessage = 'Биометрия не поддерживается на этом устройстве.';
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            
+            webauthnStatusEl.textContent = `❌ ${errorMessage}`;
             webauthnStatusEl.className = 'status error';
         }
     });
@@ -254,65 +303,67 @@
         webauthnStatusEl.className = 'status';
 
         try {
-            // 0. ПРОВЕРКА НАЛИЧИЯ РЕГИСТРАЦИИ В LOCALSTORAGE
             const storedCredString = localStorage.getItem(`webauthn_cred_${telegramUser.id}`);
             if (!storedCredString) {
-                webauthnStatusEl.textContent = 'Сначала нужно зарегистрировать биометрию.';
+                webauthnStatusEl.textContent = '❌ Сначала нужно зарегистрировать биометрию.';
                 webauthnStatusEl.className = 'status error';
                 return;
             }
+            
             const storedCred = JSON.parse(storedCredString);
-
-            // 1. ЗАПРОС "ВЫЗОВА" (CHALLENGE) С СЕРВЕРА
-            // Сервер снова генерирует challenge.
-            console.log('Шаг 1: Запрос challenge с сервера для входа...');
+            
+            // Генерируем challenge
             const challenge = new Uint8Array(32);
-            window.crypto.getRandomValues(challenge); // Симуляция
+            window.crypto.getRandomValues(challenge);
 
             const getOptions = {
                 publicKey: {
                     challenge: challenge,
                     timeout: 60000,
-                    userVerification: "required",
-                    // Указываем, какой ключ мы ожидаем использовать. Это повышает безопасность.
-                    allowCredentials: [{
+                    userVerification: "preferred", // Изменено с "required" на "preferred"
+                    rpId: getRpId(),
+                    allowCredentials: storedCred ? [{
                         type: "public-key",
                         id: base64ToBuffer(storedCred.rawId),
-                    }],
-                    // rpId должен соответствовать тому, что использовалось при регистрации.
-                    // Если rp.id не был указан, то и здесь его указывать не нужно.
-                    // rpId: "localhost", 
+                        transports: ['internal', 'hybrid', 'usb', 'nfc', 'ble']
+                    }] : [],
                 }
             };
 
-            // 2. ПОДПИСЬ "ВЫЗОВА" С ПОМОЩЬЮ КЛЮЧА НА УСТРОЙСТВЕ
-            console.log('Шаг 2: Вызов navigator.credentials.get()');
+            console.log('Параметры входа:', getOptions);
+            webauthnStatusEl.textContent = 'Пожалуйста, подтвердите вход на устройстве...';
+            
             const assertion = await navigator.credentials.get(getOptions);
             console.log('Подтверждение получено:', assertion);
 
-            // 3. ОТПРАВКА ПОДПИСАННЫХ ДАННЫХ НА СЕРВЕР ДЛЯ ПРОВЕРКИ
-            const assertionForServer = {
-                id: assertion.id,
-                rawId: bufferToBase64(assertion.rawId),
-                type: assertion.type,
-                response: {
-                    clientDataJSON: bufferToBase64(assertion.response.clientDataJSON),
-                    authenticatorData: bufferToBase64(assertion.response.authenticatorData),
-                    signature: bufferToBase64(assertion.response.signature),
-                    userHandle: assertion.response.userHandle ? bufferToBase64(assertion.response.userHandle) : null,
-                },
-            };
-
-            console.log('Шаг 3: Отправка подтверждения на сервер для проверки:', assertionForServer);
-            // Имитация сервера: в статическом варианте успешный вызов .get() уже подтверждает владение ключом.
-
-            webauthnStatusEl.textContent = 'Вход по биометрии выполнен успешно!';
+            webauthnStatusEl.textContent = '✅ Вход по биометрии выполнен успешно!';
             webauthnStatusEl.className = 'status success';
 
         } catch (err) {
             console.error('Ошибка входа по WebAuthn:', err);
-            webauthnStatusEl.textContent = `Ошибка входа: ${err.message}`;
+            
+            let errorMessage = 'Ошибка входа';
+            if (err.name === 'NotAllowedError') {
+                errorMessage = 'Вход отменен или не разрешен.';
+            } else if (err.name === 'NotFoundError') {
+                errorMessage = 'Биометрические данные не найдены. Зарегистрируйтесь сначала.';
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            
+            webauthnStatusEl.textContent = `❌ ${errorMessage}`;
             webauthnStatusEl.className = 'status error';
+        }
+    });
+
+    // Проверяем поддержку при загрузке страницы
+    checkWebAuthnSupport();
+
+    // Обработка ошибок WebAuthn
+    window.addEventListener('unhandledrejection', function(event) {
+        if (event.reason.name && event.reason.name.includes('WebAuthn')) {
+            console.log('Перехвачена ошибка WebAuthn:', event.reason);
+            event.preventDefault();
         }
     });
 
