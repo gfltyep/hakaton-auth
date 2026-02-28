@@ -8,59 +8,102 @@
     <style>
         * {
             -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
         }
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f2f5;
-            color: #1c1e21;
+            background: var(--tg-theme-bg-color, #f0f2f5);
+            color: var(--tg-theme-text-color, #1c1e21);
             margin: 0;
             padding: 16px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            text-align: center;
         }
+        
         .container {
-            background: #fff;
+            background: var(--tg-theme-secondary-bg-color, #ffffff);
             padding: 24px;
             border-radius: 16px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             max-width: 400px;
             width: 100%;
         }
+        
         h1 {
-            font-size: 24px;
+            font-size: 28px;
             margin-bottom: 20px;
-            color: #1c1e21;
+            color: var(--tg-theme-text-color, #1c1e21);
+            text-align: center;
         }
+        
         h2 {
             font-size: 18px;
-            margin-bottom: 16px;
-            color: #2c3e50;
+            margin: 16px 0;
+            color: var(--tg-theme-hint-color, #2c3e50);
         }
+        
         .user-card {
-            background-color: #f8f9fa;
+            background: var(--tg-theme-bg-color, #f8f9fa);
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 20px;
+            border: 1px solid var(--tg-theme-hint-color, #dee2e6);
         }
+        
         .user-info {
             font-size: 16px;
+            text-align: center;
         }
+        
         .user-info strong {
-            color: #007bff;
+            color: var(--tg-theme-button-color, #007bff);
         }
-        .button-group {
+        
+        .method-selector {
             display: flex;
-            flex-direction: column;
-            gap: 12px;
+            gap: 10px;
             margin: 20px 0;
+            flex-wrap: wrap;
         }
+        
+        .method-btn {
+            flex: 1;
+            min-width: 120px;
+            background: var(--tg-theme-bg-color, #f8f9fa);
+            border: 2px solid var(--tg-theme-hint-color, #dee2e6);
+            color: var(--tg-theme-text-color, #1c1e21);
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .method-btn.active {
+            border-color: var(--tg-theme-button-color, #007bff);
+            background: var(--tg-theme-button-color, #007bff);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+        
+        .method-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .auth-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: var(--tg-theme-bg-color, #f8f9fa);
+            border-radius: 12px;
+            border: 1px solid var(--tg-theme-hint-color, #dee2e6);
+        }
+        
         button {
-            background-color: #007bff;
-            color: white;
+            background: var(--tg-theme-button-color, #007bff);
+            color: var(--tg-theme-button-text-color, #ffffff);
             border: none;
             padding: 16px 20px;
             border-radius: 12px;
@@ -68,125 +111,126 @@
             font-weight: 600;
             cursor: pointer;
             width: 100%;
+            margin: 8px 0;
             transition: all 0.2s;
             -webkit-appearance: none;
-            appearance: none;
             touch-action: manipulation;
-            position: relative;
-            overflow: hidden;
         }
+        
         button:active {
             transform: scale(0.98);
             opacity: 0.9;
         }
+        
         button:disabled {
-            background-color: #cccccc;
+            opacity: 0.5;
             transform: none;
-            opacity: 0.7;
             cursor: not-allowed;
         }
-        button.primary {
-            background-color: #007bff;
-        }
+        
         button.secondary {
-            background-color: #34c759;
+            background: transparent;
+            border: 2px solid var(--tg-theme-button-color, #007bff);
+            color: var(--tg-theme-button-color, #007bff);
         }
-        button.warning {
-            background-color: #ff9500;
+        
+        .input-group {
+            margin: 16px 0;
         }
+        
+        .pin-input {
+            width: 100%;
+            padding: 16px;
+            font-size: 24px;
+            text-align: center;
+            letter-spacing: 8px;
+            border: 2px solid var(--tg-theme-hint-color, #dee2e6);
+            border-radius: 12px;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #1c1e21);
+            font-weight: 600;
+        }
+        
+        .pin-input:focus {
+            border-color: var(--tg-theme-button-color, #007bff);
+            outline: none;
+        }
+        
+        .pin-keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .key {
+            background: var(--tg-theme-bg-color, #f8f9fa);
+            border: 2px solid var(--tg-theme-hint-color, #dee2e6);
+            color: var(--tg-theme-text-color, #1c1e21);
+            padding: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        
+        .key:active {
+            background: var(--tg-theme-button-color, #007bff);
+            color: white;
+            transform: scale(0.95);
+        }
+        
         .status {
             margin-top: 16px;
             padding: 14px;
             border-radius: 10px;
+            font-size: 14px;
+            text-align: center;
             font-weight: 500;
-            font-size: 15px;
-            transition: all 0.3s;
         }
+        
         .status.success {
-            background-color: #d4edda;
+            background: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
         }
+        
         .status.error {
-            background-color: #f8d7da;
+            background: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+        
         .status.info {
-            background-color: #d1ecf1;
+            background: #d1ecf1;
             color: #0c5460;
             border: 1px solid #bee5eb;
         }
-        .status.warning {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeeba;
-        }
-        .debug-section {
-            margin-top: 20px;
+        
+        .telegram-hint {
+            background: rgba(0, 123, 255, 0.1);
+            border-left: 4px solid var(--tg-theme-button-color, #007bff);
             padding: 16px;
-            background-color: #f8f9fa;
-            border-radius: 12px;
-            text-align: left;
-            font-family: monospace;
-            font-size: 12px;
-            border: 1px solid #dee2e6;
-        }
-        .debug-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            font-weight: bold;
-            color: #495057;
-        }
-        .debug-content {
-            word-break: break-word;
-            max-height: 200px;
-            overflow-y: auto;
-            background-color: #fff;
-            padding: 10px;
+            margin: 20px 0;
             border-radius: 8px;
-            border: 1px solid #ced4da;
+            font-size: 14px;
         }
-        .debug-entry {
-            margin: 5px 0;
-            padding: 5px;
-            border-bottom: 1px solid #e9ecef;
-        }
-        .debug-entry:last-child {
-            border-bottom: none;
-        }
-        .timestamp {
-            color: #6c757d;
-            font-size: 10px;
-        }
-        .biometric-icon {
+        
+        .icon-large {
             font-size: 48px;
+            text-align: center;
             margin: 10px 0;
-            animation: pulse 2s infinite;
         }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+        
+        .hidden {
+            display: none !important;
         }
-        .test-badge {
-            background-color: #ffc107;
-            color: #000;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-left: 8px;
-        }
-        .device-info {
-            font-size: 13px;
-            color: #6c757d;
-            margin: 10px 0;
-            padding: 10px;
-            background-color: #e9ecef;
-            border-radius: 8px;
+        
+        .method-description {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #6c757d);
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -195,379 +239,390 @@
 <div class="container">
     <h1>🔐 Умные Заметки</h1>
     
-    <div class="device-info" id="deviceInfo">Определение устройства...</div>
-
     <!-- Информация о пользователе -->
     <div class="user-card">
-        <div class="user-info" id="user-data">Загрузка данных...</div>
+        <div class="user-info" id="userData">Загрузка...</div>
     </div>
-
-    <!-- Биометрическая секция -->
-    <div class="biometric-icon" id="biometricIcon">📱</div>
-    <h2 id="biometricTitle">Биометрическая аутентификация</h2>
     
-    <div class="button-group">
-        <button id="diagnosticBtn" class="warning">🔍 Диагностика WebAuthn</button>
-        <button id="registerBtn" class="secondary" disabled>📱 Настроить Face ID</button>
-        <button id="loginBtn" class="primary" disabled>🔓 Войти по Face ID</button>
+    <!-- Выбор метода аутентификации -->
+    <div class="method-selector">
+        <button class="method-btn active" data-method="pin">🔢 PIN-код</button>
+        <button class="method-btn" data-method="telegram">📱 Telegram</button>
+        <button class="method-btn" data-method="biometric">👆 Face ID</button>
     </div>
-
-    <!-- Статус -->
-    <div id="statusMessage" class="status"></div>
-
-    <!-- Отладочная секция (изначально скрыта) -->
-    <div class="debug-section" id="debugSection" style="display: none;">
-        <div class="debug-header">
-            <span>📋 Отладочная информация</span>
-            <button id="toggleDebug" style="width: auto; padding: 4px 8px; background-color: #6c757d;">Скрыть</button>
+    
+    <!-- PIN-код метод (по умолчанию активен) -->
+    <div id="pinMethod" class="auth-section">
+        <div class="icon-large">🔢</div>
+        <h2>Вход по PIN-коду</h2>
+        <p class="method-description">Введите 4-значный PIN-код для входа</p>
+        
+        <!-- Поле для PIN -->
+        <div class="input-group">
+            <input type="password" 
+                   class="pin-input" 
+                   id="pinInput" 
+                   maxlength="4" 
+                   inputmode="numeric" 
+                   pattern="[0-9]*"
+                   placeholder="●●●●"
+                   autocomplete="off">
         </div>
-        <div class="debug-content" id="debugContent"></div>
+        
+        <!-- Цифровая клавиатура для удобства -->
+        <div class="pin-keypad" id="pinKeypad">
+            <div class="key" data-number="1">1</div>
+            <div class="key" data-number="2">2</div>
+            <div class="key" data-number="3">3</div>
+            <div class="key" data-number="4">4</div>
+            <div class="key" data-number="5">5</div>
+            <div class="key" data-number="6">6</div>
+            <div class="key" data-number="7">7</div>
+            <div class="key" data-number="8">8</div>
+            <div class="key" data-number="9">9</div>
+            <div class="key" data-number="clear" style="font-size: 18px;">⌫</div>
+            <div class="key" data-number="0">0</div>
+            <div class="key" data-number="ok" style="background: #007bff; color: white;">✓</div>
+        </div>
+        
+        <button id="setPinBtn" class="secondary">📝 Установить PIN-код</button>
+        <button id="loginWithPinBtn">🔓 Войти по PIN-коду</button>
     </div>
-
-    <!-- Кнопка показа отладки -->
-    <button id="showDebugBtn" style="background-color: #6c757d; margin-top: 10px; padding: 8px;">📋 Показать отладку</button>
+    
+    <!-- Telegram метод -->
+    <div id="telegramMethod" class="auth-section hidden">
+        <div class="icon-large">📱</div>
+        <h2>Вход через Telegram</h2>
+        <p class="method-description">Используйте данные вашего аккаунта Telegram</p>
+        
+        <div class="telegram-hint">
+            <strong>✓ Автоматический вход</strong><br>
+            Вы уже авторизованы через Telegram. Нажмите кнопку ниже для подтверждения.
+        </div>
+        
+        <button id="telegramLoginBtn">🔓 Войти через Telegram</button>
+    </div>
+    
+    <!-- Биометрический метод (с запасным вариантом) -->
+    <div id="biometricMethod" class="auth-section hidden">
+        <div class="icon-large" id="biometricIcon">👆</div>
+        <h2 id="biometricTitle">Face ID / Touch ID</h2>
+        <p class="method-description" id="biometricDescription">
+            Используйте биометрию для быстрого входа
+        </p>
+        
+        <div id="biometricUnavailable" class="telegram-hint" style="display: none;">
+            <strong>⚠️ Face ID недоступен</strong><br>
+            В текущей версии Telegram для iOS биометрия не поддерживается. 
+            Используйте PIN-код или вход через Telegram.
+        </div>
+        
+        <button id="checkBiometricBtn" class="secondary">🔍 Проверить доступность</button>
+        <button id="biometricLoginBtn" disabled>🔓 Войти по биометрии</button>
+        <button id="biometricSetupBtn" disabled>📱 Настроить биометрию</button>
+    </div>
+    
+    <!-- Статус сообщения -->
+    <div id="statusMessage" class="status"></div>
 </div>
 
 <script>
     // =================================================================
-    // ИНИЦИАЛИЗАЦИЯ И НАСТРОЙКА
+    // ИНИЦИАЛИЗАЦИЯ
     // =================================================================
     
     const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+    
+    // Состояние приложения
+    const state = {
+        user: null,
+        isIOS: /iPhone|iPad|iPod/i.test(navigator.userAgent),
+        isAndroid: /Android/i.test(navigator.userAgent),
+        isTelegram: Boolean(tg.initDataUnsafe),
+        currentMethod: 'pin',
+        biometricAvailable: false,
+        pin: localStorage.getItem('user_pin') || null
+    };
     
     // Элементы DOM
     const elements = {
-        userData: document.getElementById('user-data'),
-        registerBtn: document.getElementById('registerBtn'),
-        loginBtn: document.getElementById('loginBtn'),
-        diagnosticBtn: document.getElementById('diagnosticBtn'),
-        statusMessage: document.getElementById('statusMessage'),
-        debugSection: document.getElementById('debugSection'),
-        debugContent: document.getElementById('debugContent'),
-        showDebugBtn: document.getElementById('showDebugBtn'),
-        deviceInfo: document.getElementById('deviceInfo'),
+        userData: document.getElementById('userData'),
+        methodBtns: document.querySelectorAll('.method-btn'),
+        pinMethod: document.getElementById('pinMethod'),
+        telegramMethod: document.getElementById('telegramMethod'),
+        biometricMethod: document.getElementById('biometricMethod'),
+        pinInput: document.getElementById('pinInput'),
+        setPinBtn: document.getElementById('setPinBtn'),
+        loginWithPinBtn: document.getElementById('loginWithPinBtn'),
+        telegramLoginBtn: document.getElementById('telegramLoginBtn'),
+        checkBiometricBtn: document.getElementById('checkBiometricBtn'),
+        biometricLoginBtn: document.getElementById('biometricLoginBtn'),
+        biometricSetupBtn: document.getElementById('biometricSetupBtn'),
+        biometricUnavailable: document.getElementById('biometricUnavailable'),
         biometricIcon: document.getElementById('biometricIcon'),
-        biometricTitle: document.getElementById('biometricTitle')
+        biometricTitle: document.getElementById('biometricTitle'),
+        biometricDescription: document.getElementById('biometricDescription'),
+        statusMessage: document.getElementById('statusMessage')
     };
-
-    // Состояние приложения
-    const state = {
-        telegramUser: null,
-        isIOS: /iPhone|iPad|iPod/i.test(navigator.userAgent),
-        isInTelegram: Boolean(tg.initDataUnsafe),
-        debugLogs: [],
-        diagnosticResults: {}
-    };
-
-    // Инициализация Telegram
-    tg.ready();
-    tg.expand();
-
-    // Отображение информации об устройстве
-    updateDeviceInfo();
-
-    // =================================================================
-    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
-    // =================================================================
-
-    function addDebugLog(category, message, data = null) {
-        const logEntry = {
-            timestamp: new Date().toISOString(),
-            category,
-            message,
-            data: data ? JSON.stringify(data) : null
-        };
-        state.debugLogs.push(logEntry);
-        updateDebugDisplay();
-        console.log(`[${category}] ${message}`, data || '');
-    }
-
-    function updateDebugDisplay() {
-        if (!elements.debugContent) return;
-        
-        const html = state.debugLogs.slice(-10).reverse().map(log => `
-            <div class="debug-entry">
-                <span class="timestamp">${new Date(log.timestamp).toLocaleTimeString()}</span>
-                <strong>${log.category}:</strong> ${log.message}
-                ${log.data ? `<br><small>${log.data}</small>` : ''}
-            </div>
-        `).join('');
-        
-        elements.debugContent.innerHTML = html || '<div class="debug-entry">Нет записей</div>';
-    }
-
-    function setStatus(message, type = 'info') {
-        elements.statusMessage.textContent = message;
-        elements.statusMessage.className = `status ${type}`;
-        addDebugLog('STATUS', message, { type });
-    }
-
-    function updateDeviceInfo() {
-        const info = [
-            `Устройство: ${state.isIOS ? '📱 iPhone/iPad' : '📱 Другое'}`,
-            `Telegram WebApp: ${state.isInTelegram ? '✅ Да' : '❌ Нет'}`,
-            `User Agent: ${navigator.userAgent.substring(0, 50)}...`
-        ].join('<br>');
-        elements.deviceInfo.innerHTML = info;
-    }
-
+    
     // =================================================================
     // ПОЛУЧЕНИЕ ДАННЫХ ПОЛЬЗОВАТЕЛЯ
     // =================================================================
-
-    if (state.isInTelegram && tg.initDataUnsafe.user) {
-        state.telegramUser = tg.initDataUnsafe.user;
+    
+    if (state.isTelegram && tg.initDataUnsafe.user) {
+        state.user = tg.initDataUnsafe.user;
         elements.userData.innerHTML = `
-            <strong>${state.telegramUser.first_name || ''} ${state.telegramUser.last_name || ''}</strong>
-            <br>ID: ${state.telegramUser.id}
+            <strong>${state.user.first_name || ''} ${state.user.last_name || ''}</strong><br>
+            ID: ${state.user.id}<br>
+            <small>${state.isIOS ? '📱 iOS' : '📱 Android'}</small>
         `;
         
-        elements.registerBtn.disabled = false;
-        elements.loginBtn.disabled = false;
-        
-        addDebugLog('USER', 'Данные пользователя получены', state.telegramUser);
+        // Загружаем сохраненный PIN для этого пользователя
+        const savedPin = localStorage.getItem(`pin_${state.user.id}`);
+        if (savedPin) {
+            state.pin = savedPin;
+        }
     } else {
         elements.userData.innerHTML = '❌ Ошибка: откройте через Telegram';
-        setStatus('Приложение должно быть открыто в Telegram', 'error');
-        addDebugLog('ERROR', 'Не удалось получить данные пользователя');
+        showStatus('Приложение должно быть открыто в Telegram', 'error');
     }
-
+    
     // =================================================================
-    // ДИАГНОСТИКА WEB AUTHN
+    // ПЕРЕКЛЮЧЕНИЕ МЕТОДОВ АУТЕНТИФИКАЦИИ
     // =================================================================
-
-    async function runDiagnostics() {
-        setStatus('🔍 Выполняется диагностика...', 'info');
-        elements.diagnosticBtn.disabled = true;
-        
-        const results = {
-            webAuthnSupported: false,
-            platformAuthenticator: false,
-            userVerifyingPlatformAuthenticator: false,
-            conditionalMediation: false,
-            errors: []
-        };
-
-        try {
-            // Проверка 1: Поддержка WebAuthn
-            results.webAuthnSupported = 'PublicKeyCredential' in window;
-            addDebugLog('DIAG', 'WebAuthn поддержка', { supported: results.webAuthnSupported });
-
-            if (results.webAuthnSupported) {
-                // Проверка 2: Platform authenticator
-                try {
-                    results.platformAuthenticator = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-                    addDebugLog('DIAG', 'Platform authenticator', { available: results.platformAuthenticator });
-                } catch (e) {
-                    results.errors.push('platform_check: ' + e.message);
-                }
-
-                // Проверка 3: Conditional mediation
-                if (PublicKeyCredential.isConditionalMediationAvailable) {
-                    try {
-                        results.conditionalMediation = await PublicKeyCredential.isConditionalMediationAvailable();
-                        addDebugLog('DIAG', 'Conditional mediation', { available: results.conditionalMediation });
-                    } catch (e) {
-                        results.errors.push('conditional_check: ' + e.message);
-                    }
-                }
+    
+    elements.methodBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const method = btn.dataset.method;
+            
+            // Обновляем активную кнопку
+            elements.methodBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Показываем соответствующий метод
+            elements.pinMethod.classList.add('hidden');
+            elements.telegramMethod.classList.add('hidden');
+            elements.biometricMethod.classList.add('hidden');
+            
+            if (method === 'pin') {
+                elements.pinMethod.classList.remove('hidden');
+            } else if (method === 'telegram') {
+                elements.telegramMethod.classList.remove('hidden');
+            } else if (method === 'biometric') {
+                elements.biometricMethod.classList.remove('hidden');
+                checkBiometricSupport();
             }
-        } catch (e) {
-            results.errors.push('general: ' + e.message);
-            addDebugLog('ERROR', 'Ошибка диагностики', e.message);
-        }
-
-        state.diagnosticResults = results;
-        
-        // Формируем сообщение о результатах
-        let message = '📊 Результаты диагностики:\n';
-        message += `• WebAuthn: ${results.webAuthnSupported ? '✅' : '❌'}\n`;
-        message += `• Platform Auth: ${results.platformAuthenticator ? '✅' : '❌'}\n`;
-        if (results.errors.length > 0) {
-            message += `• Ошибки: ${results.errors.length}`;
-        }
-        
-        setStatus(message, results.platformAuthenticator ? 'success' : 'warning');
-        elements.diagnosticBtn.disabled = false;
-        
-        return results;
-    }
-
+            
+            state.currentMethod = method;
+        });
+    });
+    
     // =================================================================
-    // УПРОЩЕННАЯ РЕГИСТРАЦИЯ С ОДНИМ КАСАНИЕМ
+    // МЕТОД 1: PIN-КОД
     // =================================================================
-
-    async function createBiometricCredential() {
-        if (!state.telegramUser) return;
-
-        try {
-            // Для iOS показываем специальное сообщение
-            if (state.isIOS) {
-                setStatus('📱 Нажмите на кнопку еще раз для вызова Face ID...', 'info');
-                
-                // Пробуем вызвать WebAuthn с минимальными параметрами
-                const challenge = new Uint8Array(32);
-                window.crypto.getRandomValues(challenge);
-
-                // Минимальные опции для iOS
-                const createOptions = {
-                    publicKey: {
-                        challenge: challenge,
-                        rp: {
-                            name: "Умные Заметки",
-                            id: window.location.hostname || "localhost"
-                        },
-                        user: {
-                            id: new TextEncoder().encode(String(state.telegramUser.id)),
-                            name: String(state.telegramUser.id),
-                            displayName: state.telegramUser.first_name || 'User'
-                        },
-                        pubKeyCredParams: [
-                            { type: "public-key", alg: -7 }
-                        ],
-                        authenticatorSelection: {
-                            userVerification: "required",
-                            residentKey: "discouraged"
-                        },
-                        timeout: 60000,
-                        attestation: "none"
-                    }
-                };
-
-                addDebugLog('WEBAUTHN', 'Попытка регистрации', createOptions);
-
-                // Важно: на iOS нужно вызывать непосредственно в обработчике касания
-                const credential = await navigator.credentials.create(createOptions);
-                
-                if (credential) {
-                    // Сохраняем только ID
-                    localStorage.setItem(`webauthn_id_${state.telegramUser.id}`, credential.id);
-                    setStatus('✅ Face ID успешно настроен!', 'success');
-                    elements.biometricIcon.textContent = '✅';
-                    addDebugLog('SUCCESS', 'Регистрация успешна', { id: credential.id });
+    
+    // Цифровая клавиатура
+    document.querySelectorAll('.key[data-number]').forEach(key => {
+        key.addEventListener('click', () => {
+            const number = key.dataset.number;
+            
+            if (number === 'clear') {
+                // Удаляем последний символ
+                elements.pinInput.value = elements.pinInput.value.slice(0, -1);
+            } else if (number === 'ok') {
+                // Подтверждаем ввод
+                if (elements.pinInput.value.length === 4) {
+                    loginWithPin(elements.pinInput.value);
                 }
             } else {
-                // Для других платформ
-                setStatus('Настройка биометрии...', 'info');
-                // ... аналогичный код
-            }
-        } catch (err) {
-            handleWebAuthnError(err);
-        }
-    }
-
-    function handleWebAuthnError(err) {
-        addDebugLog('ERROR', 'WebAuthn ошибка', { name: err.name, message: err.message });
-        
-        let message = 'Ошибка: ';
-        switch (err.name) {
-            case 'NotAllowedError':
-                if (state.isIOS) {
-                    message = '❌ Face ID не вызван. Попробуйте:\n' +
-                             '1. Нажать кнопку еще раз\n' +
-                             '2. Проверить настройки Face ID\n' +
-                             '3. Перезапустить Telegram';
-                } else {
-                    message = '❌ Действие отменено пользователем';
+                // Добавляем цифру
+                if (elements.pinInput.value.length < 4) {
+                    elements.pinInput.value += number;
                 }
-                break;
-            case 'NotSupportedError':
-                message = '❌ Биометрия не поддерживается';
-                break;
-            case 'SecurityError':
-                message = '❌ Ошибка безопасности (требуется HTTPS)';
-                break;
-            default:
-                message = `❌ ${err.message || 'Неизвестная ошибка'}`;
-        }
-        
-        setStatus(message, 'error');
-        
-        // Показываем popup в Telegram
-        if (state.isInTelegram) {
-            tg.showPopup({
-                title: 'Ошибка Face ID',
-                message: message,
-                buttons: [{ type: 'ok' }]
-            });
-        }
-    }
-
-    // =================================================================
-    // ТЕСТОВЫЙ РЕЖИМ (ЕСЛИ WEB AUTHN НЕ РАБОТАЕТ)
-    // =================================================================
-
-    function useTestMode() {
-        setStatus('🧪 Используется тестовый режим', 'warning');
-        
-        // Сохраняем тестовые данные
-        localStorage.setItem(`test_mode_${state.telegramUser.id}`, 'true');
-        
-        // Показываем уведомление
-        tg.showPopup({
-            title: 'Тестовый режим',
-            message: 'Face ID не доступен. Используется тестовый режим.',
-            buttons: [{ type: 'ok' }]
+            }
         });
+    });
+    
+    // Установка PIN-кода
+    elements.setPinBtn.addEventListener('click', () => {
+        const pin = elements.pinInput.value;
+        
+        if (pin.length !== 4 || !/^\d+$/.test(pin)) {
+            showStatus('Введите 4-значный PIN-код', 'error');
+            return;
+        }
+        
+        // Сохраняем PIN для пользователя
+        localStorage.setItem(`pin_${state.user.id}`, pin);
+        state.pin = pin;
+        
+        showStatus('✅ PIN-код сохранен', 'success');
+        elements.pinInput.value = '';
+    });
+    
+    // Вход по PIN-коду
+    elements.loginWithPinBtn.addEventListener('click', () => {
+        const pin = elements.pinInput.value;
+        loginWithPin(pin);
+    });
+    
+    function loginWithPin(pin) {
+        const savedPin = localStorage.getItem(`pin_${state.user.id}`);
+        
+        if (!savedPin) {
+            showStatus('❌ PIN-код не установлен. Сначала установите PIN.', 'error');
+            return;
+        }
+        
+        if (pin === savedPin) {
+            showStatus('✅ Вход выполнен успешно!', 'success');
+            
+            // Отправляем результат в Telegram
+            tg.sendData(JSON.stringify({
+                method: 'pin',
+                success: true,
+                userId: state.user.id
+            }));
+            
+            elements.pinInput.value = '';
+        } else {
+            showStatus('❌ Неверный PIN-код', 'error');
+            elements.pinInput.value = '';
+        }
     }
-
+    
     // =================================================================
-    // ОБРАБОТЧИКИ СОБЫТИЙ
+    // МЕТОД 2: TELEGRAM
     // =================================================================
-
-    // Диагностика
-    elements.diagnosticBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        await runDiagnostics();
+    
+    elements.telegramLoginBtn.addEventListener('click', () => {
+        // Просто подтверждаем, что пользователь уже авторизован через Telegram
+        showStatus('✅ Вход через Telegram выполнен', 'success');
+        
+        tg.sendData(JSON.stringify({
+            method: 'telegram',
+            success: true,
+            userId: state.user.id,
+            userData: state.user
+        }));
     });
-
-    // Регистрация
-    elements.registerBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
+    
+    // =================================================================
+    // МЕТОД 3: БИОМЕТРИЯ (С ЗАПАСНЫМ ВАРИАНТОМ)
+    // =================================================================
+    
+    async function checkBiometricSupport() {
+        elements.biometricUnavailable.style.display = 'none';
         
-        if (!state.telegramUser) return;
-        
-        elements.registerBtn.disabled = true;
-        
-        // Запускаем диагностику перед регистрацией
-        const diag = await runDiagnostics();
-        
-        if (!diag.platformAuthenticator && !state.isIOS) {
-            useTestMode();
-            elements.registerBtn.disabled = false;
+        // На iOS в Telegram WebView биометрия НЕ РАБОТАЕТ
+        if (state.isIOS) {
+            elements.biometricUnavailable.style.display = 'block';
+            elements.biometricIcon.textContent = '❌';
+            elements.biometricTitle.textContent = 'Face ID не доступен';
+            elements.biometricDescription.textContent = 
+                'Telegram для iOS не поддерживает Face ID в WebApp. Используйте PIN-код.';
+            elements.biometricLoginBtn.disabled = true;
+            elements.biometricSetupBtn.disabled = true;
+            state.biometricAvailable = false;
             return;
         }
         
-        // Пытаемся создать биометрию
-        await createBiometricCredential();
-        
-        elements.registerBtn.disabled = false;
-    });
-
-    // Вход
-    elements.loginBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
-        
-        if (!state.telegramUser) return;
-        
-        // Проверяем наличие сохраненных данных
-        const hasCredential = localStorage.getItem(`webauthn_id_${state.telegramUser.id}`);
-        const testMode = localStorage.getItem(`test_mode_${state.telegramUser.id}`);
-        
-        if (testMode) {
-            setStatus('✅ Вход в тестовом режиме', 'success');
+        // На Android проверяем поддержку
+        if (window.PublicKeyCredential) {
+            try {
+                const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                
+                if (available) {
+                    elements.biometricIcon.textContent = '✅';
+                    elements.biometricTitle.textContent = 'Биометрия доступна';
+                    elements.biometricDescription.textContent = 
+                        'Используйте отпечаток пальца или сканер лица';
+                    elements.biometricLoginBtn.disabled = false;
+                    elements.biometricSetupBtn.disabled = false;
+                    state.biometricAvailable = true;
+                } else {
+                    showBiometricUnavailable();
+                }
+            } catch (e) {
+                console.error('Ошибка проверки биометрии:', e);
+                showBiometricUnavailable();
+            }
+        } else {
+            showBiometricUnavailable();
+        }
+    }
+    
+    function showBiometricUnavailable() {
+        elements.biometricUnavailable.style.display = 'block';
+        elements.biometricIcon.textContent = '❌';
+        elements.biometricTitle.textContent = 'Биометрия не доступна';
+        elements.biometricLoginBtn.disabled = true;
+        elements.biometricSetupBtn.disabled = true;
+        state.biometricAvailable = false;
+    }
+    
+    elements.checkBiometricBtn.addEventListener('click', checkBiometricSupport);
+    
+    // Настройка биометрии (только для Android)
+    elements.biometricSetupBtn.addEventListener('click', async () => {
+        if (!state.biometricAvailable) {
+            showStatus('Биометрия не доступна на этом устройстве', 'error');
             return;
         }
         
-        if (!hasCredential) {
-            setStatus('❌ Сначала настройте биометрию', 'error');
-            return;
-        }
-        
-        setStatus('🔐 Используйте Face ID для входа...', 'info');
+        showStatus('🔐 Настройка биометрии...', 'info');
         
         try {
-            // Попытка входа
+            // Простой тест биометрии
+            const challenge = new Uint8Array(32);
+            window.crypto.getRandomValues(challenge);
+            
+            const createOptions = {
+                publicKey: {
+                    challenge: challenge,
+                    rp: { name: "Умные Заметки", id: window.location.hostname },
+                    user: {
+                        id: new TextEncoder().encode(String(state.user.id)),
+                        name: String(state.user.id),
+                        displayName: state.user.first_name || 'User'
+                    },
+                    pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+                    authenticatorSelection: { userVerification: "required" },
+                    timeout: 60000,
+                    attestation: "none"
+                }
+            };
+            
+            const credential = await navigator.credentials.create(createOptions);
+            
+            if (credential) {
+                localStorage.setItem(`biometric_${state.user.id}`, 'enabled');
+                showStatus('✅ Биометрия успешно настроена!', 'success');
+            }
+        } catch (err) {
+            console.error('Ошибка настройки биометрии:', err);
+            showStatus(`❌ Ошибка: ${err.message}`, 'error');
+        }
+    });
+    
+    // Вход по биометрии
+    elements.biometricLoginBtn.addEventListener('click', async () => {
+        if (!state.biometricAvailable) {
+            showStatus('Биометрия не доступна', 'error');
+            return;
+        }
+        
+        const hasBiometric = localStorage.getItem(`biometric_${state.user.id}`);
+        if (!hasBiometric) {
+            showStatus('Сначала настройте биометрию', 'error');
+            return;
+        }
+        
+        showStatus('🔐 Используйте биометрию для входа...', 'info');
+        
+        try {
             const challenge = new Uint8Array(32);
             window.crypto.getRandomValues(challenge);
             
@@ -576,52 +631,57 @@
                     challenge: challenge,
                     timeout: 60000,
                     userVerification: "required",
-                    rpId: window.location.hostname || "localhost"
+                    rpId: window.location.hostname
                 }
             };
             
             const assertion = await navigator.credentials.get(getOptions);
             
-            setStatus('✅ Вход выполнен успешно!', 'success');
-            addDebugLog('SUCCESS', 'Вход успешен');
-            
-            // Отправляем результат в Telegram
-            tg.sendData(JSON.stringify({
-                type: 'biometric_login',
-                success: true,
-                userId: state.telegramUser.id
-            }));
-            
+            if (assertion) {
+                showStatus('✅ Вход по биометрии выполнен!', 'success');
+                
+                tg.sendData(JSON.stringify({
+                    method: 'biometric',
+                    success: true,
+                    userId: state.user.id
+                }));
+            }
         } catch (err) {
-            handleWebAuthnError(err);
+            console.error('Ошибка входа по биометрии:', err);
+            showStatus(`❌ Ошибка: ${err.message}`, 'error');
         }
     });
-
-    // Управление отладкой
-    elements.showDebugBtn.addEventListener('click', () => {
-        elements.debugSection.style.display = 'block';
-        elements.showDebugBtn.style.display = 'none';
-    });
-
-    document.getElementById('toggleDebug').addEventListener('click', () => {
-        elements.debugSection.style.display = 'none';
-        elements.showDebugBtn.style.display = 'block';
-    });
-
+    
+    // =================================================================
+    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    // =================================================================
+    
+    function showStatus(message, type = 'info') {
+        elements.statusMessage.textContent = message;
+        elements.statusMessage.className = `status ${type}`;
+    }
+    
+    // Показываем подсказку для iOS
+    if (state.isIOS) {
+        const hint = document.createElement('div');
+        hint.className = 'telegram-hint';
+        hint.innerHTML = `
+            <strong>📱 Для iOS:</strong><br>
+            Face ID не работает в Telegram WebView. 
+            Пожалуйста, используйте PIN-код или вход через Telegram.
+        `;
+        document.querySelector('.container').appendChild(hint);
+    }
+    
     // =================================================================
     // ИНИЦИАЛИЗАЦИЯ
     // =================================================================
-
-    addDebugLog('INIT', 'Приложение запущено', {
-        ios: state.isIOS,
-        telegram: state.isInTelegram,
-        timestamp: new Date().toISOString()
-    });
-
-    // Автоматическая диагностика при загрузке
-    setTimeout(() => {
-        runDiagnostics();
-    }, 1000);
+    
+    // Показываем приветственное сообщение
+    showStatus('Выберите способ входа', 'info');
+    
+    // Проверяем биометрию при загрузке
+    checkBiometricSupport();
 
 </script>
 
