@@ -159,6 +159,13 @@
         return buffer;
     }
 
+    // Новая вспомогательная функция для преобразования строки в ArrayBuffer
+    // Это правильный способ для создания user.id
+    function strToArrayBuffer(str) {
+        const encoder = new TextEncoder();
+        return encoder.encode(str); // Возвращает Uint8Array, который является ArrayBufferView
+    }
+
     // --- РЕГИСТРАЦИЯ БИОМЕТРИИ ---
     registerBtn.addEventListener('click', async () => {
         if (!telegramUser) return;
@@ -179,7 +186,7 @@
                     challenge: challenge,
                     rp: { name: "Умные Заметки" }, // Relying Party - ваше приложение
                     user: {
-                        id: base64ToBuffer(String(telegramUser.id)), // ID пользователя должен быть ArrayBuffer
+                        id: strToArrayBuffer(String(telegramUser.id)), // ID пользователя должен быть ArrayBuffer
                         name: telegramUser.username || `${telegramUser.first_name}`,
                         displayName: telegramUser.first_name || 'Пользователь',
                     },
