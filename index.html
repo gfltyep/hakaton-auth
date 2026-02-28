@@ -145,6 +145,20 @@
     // РАЗДЕЛ 2: БИОМЕТРИЧЕСКАЯ АУТЕНТИФИКАЦИЯ (WebAuthn)
     // =================================================================
 
+    // Проверяем, поддерживает ли браузер WebAuthn
+    if (window.PublicKeyCredential) {
+        console.log('WebAuthn поддерживается этим браузером.');
+    } else {
+        console.warn('WebAuthn не поддерживается этим браузером.');
+        webauthnStatusEl.textContent = 'Ваш браузер не поддерживает биометрию (WebAuthn).';
+        webauthnStatusEl.className = 'status error';
+        // Отключаем кнопки навсегда, если поддержки нет
+        registerBtn.disabled = true;
+        loginBtn.disabled = true;
+        registerBtn.style.display = 'none'; // Можно даже скрыть их
+        loginBtn.style.display = 'none';
+    }
+
     // Вспомогательные функции для конвертации Base64 <-> ArrayBuffer
     function bufferToBase64(buff) {
         return btoa(String.fromCharCode.apply(null, new Uint8Array(buff)));
@@ -184,7 +198,10 @@
             const createOptions = {
                 publicKey: {
                     challenge: challenge,
-                    rp: { name: "Умные Заметки" }, // Relying Party - ваше приложение
+                    rp: { 
+                        name: "Умные Заметки",
+                        id: "localhost" // Явно указываем ID для работы с локального файла
+                    },
                     user: {
                         id: strToArrayBuffer(String(telegramUser.id)), // ID пользователя должен быть ArrayBuffer
                         name: telegramUser.username || `${telegramUser.first_name}`,
@@ -196,7 +213,7 @@
                         userVerification: "required",
                     },
                     timeout: 60000,
-                    attestation: "direct"
+                    attestation: "none" // "none" для лучшей совместимости
                 }
             };
 
@@ -264,7 +281,7 @@
                         type: "public-key",
                         id: base64ToBuffer(storedCred.rawId),
                     }],
-                    rpId: window.location.hostname, // Домен, на котором зарегистрирован ключ
+                    rpId: "localhost", // Должен совпадать с rp.id при регистрации
                 }
             };
 
